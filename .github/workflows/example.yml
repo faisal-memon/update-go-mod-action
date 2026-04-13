@@ -1,0 +1,31 @@
+name: Example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Update go.mod
+        id: update
+        uses: ./
+        with:
+          update-toolchain: "true"
+
+      - name: Create pull request
+        if: steps.update.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: Update Go version to ${{ steps.update.outputs.latest-version }}
+          title: Update Go version to ${{ steps.update.outputs.latest-version }}
+          body: |
+            Updates the go.mod Go version to the latest stable release.
+          branch: chore/update-go-${{ steps.update.outputs.latest-version }}
