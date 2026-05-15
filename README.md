@@ -7,18 +7,6 @@ It is designed to stay small and composable:
 - this action decides whether `go.mod` needs a Go version bump and edits the file
 - a separate workflow step can create a pull request if a change was made
 
-## Inputs
-
-- `go-mod-path`: path to the `go.mod` file. Default: `go.mod`
-- `update-toolchain`: when `true`, also updates an existing `toolchain go...` line to match. Default: `false`
-
-## Outputs
-
-- `changed`: `true` when the action modified the target file
-- `previous-version`: the version originally declared by the `go` directive
-- `current-version`: the version declared after the action runs
-- `latest-version`: the latest stable Go version found from `go.dev`
-
 ## Example
 
 ```yaml
@@ -42,7 +30,7 @@ jobs:
 
       - name: Update go.mod
         id: update
-        uses: faisal-memon/update-go-mod-action@main
+        uses: faisal-memon/update-go-mod-action@v1
         with:
           update-toolchain: "true"
 
@@ -57,12 +45,14 @@ jobs:
           branch: chore/update-go-${{ steps.update.outputs.latest-version }}
 ```
 
-## Suggested Release Model
+## Inputs
 
-After publishing the repository, create a stable major tag such as `v1` so other repositories can use:
+- `go-mod-path`: path to the `go.mod` file. Default: `go.mod`
+- `update-toolchain`: when `true`, also updates an existing `toolchain go...` line to match. Default: `false`
 
-```yaml
-uses: faisal-memon/update-go-mod-action@v1
-```
+## Outputs
 
-You can move `v1` forward as you publish compatible updates.
+- `changed`: `true` when the action modified the target file
+- `previous-version`: the version originally declared by the `go` directive
+- `current-version`: the version declared after the action runs
+- `latest-version`: the latest stable Go version found from `go.dev`
