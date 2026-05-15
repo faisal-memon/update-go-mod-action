@@ -1,11 +1,6 @@
 # update-go-mod-action
 
-`update-go-mod-action` is a standalone custom GitHub Action that checks the latest stable Go release from `go.dev` and updates the `go` directive in `go.mod` when a repository is behind.
-
-It is designed to stay small and composable:
-
-- this action decides whether `go.mod` needs a Go version bump and edits the file
-- a separate workflow step can create a pull request if a change was made
+Keeps `go.mod` up to date with latest stable Go release from `go.dev`:
 
 ## Example
 
