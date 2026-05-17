@@ -1,0 +1,37 @@
+name: Release Build
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Bump and write semantic version tag
+        id: bump
+        uses: faisal-memon/pr-label-semver@v0
+        with:
+          github-token: ${{ github.token }}
+          write-tag: "true"
+          write-major-tag: "true"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.bump.outputs.new-tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
