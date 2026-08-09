@@ -29,13 +29,19 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Set up Go
+      uses: actions/setup-go@v7
+      with:
+        go-version-file: ${{ github.action_path }}/go.mod
+        cache: "false"
+
     - name: Update go.mod
       id: update
       shell: bash
       env:
         INPUT_GO_MOD_PATH: ${{ inputs.go-mod-path }}
         INPUT_UPDATE_TOOLCHAIN: ${{ inputs.update-toolchain }}
-      run: python3 "${{ github.action_path }}/update_go_mod.py"
+      run: go run "${{ github.action_path }}/cmd/update-go-mod"
 
 branding:
   icon: upload-cloud

@@ -1,6 +1,8 @@
 # update-go-mod-action
 
-Keeps `go.mod` up to date with latest stable Go release from `go.dev`:
+Keeps `go.mod` up to date with the latest stable Go release from `go.dev`.
+
+The action sets up Go with `actions/setup-go` and runs its Go implementation directly, so callers do not need to add a separate Go setup step before using it.
 
 ## Example
 
