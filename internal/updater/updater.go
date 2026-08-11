@@ -25,9 +25,13 @@ type Config struct {
 	GoModPath       string
 	UpdateToolchain bool
 	GitHubOutput    string
-	ReleasesJSON    string
 	HTTPClient      *http.Client
 	Logger          *slog.Logger
+	hooks           hooks
+}
+
+type hooks struct {
+	fetchReleases func() ([]byte, error)
 }
 
 type Release struct {
@@ -185,8 +189,12 @@ func latestStableVersion(config Config) (string, error) {
 
 func loadReleases(config Config) ([]Release, error) {
 	var data []byte
-	if strings.TrimSpace(config.ReleasesJSON) != "" {
-		data = []byte(config.ReleasesJSON)
+	if config.hooks.fetchReleases != nil {
+		var err error
+		data, err = config.hooks.fetchReleases()
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		client := config.HTTPClient
 		if client == nil {

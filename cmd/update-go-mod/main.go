@@ -13,7 +13,6 @@ func main() {
 		GoModPath:       getenv("INPUT_GO_MOD_PATH", "go.mod"),
 		UpdateToolchain: parseBool(getenv("INPUT_UPDATE_TOOLCHAIN", "false")),
 		GitHubOutput:    os.Getenv("GITHUB_OUTPUT"),
-		ReleasesJSON:    os.Getenv("GO_RELEASES_JSON"),
 	}
 
 	if err := updater.Run(config); err != nil {

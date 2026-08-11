@@ -19,8 +19,8 @@ func TestUpdateGoDirective(t *testing.T) {
 	path := writeTempGoMod(t, "module example.com/app\n\ngo 1.25.0\n")
 
 	result, err := update(Config{
-		GoModPath:    path,
-		ReleasesJSON: releasesJSON,
+		GoModPath: path,
+		hooks:     releaseHooks(t),
 	})
 	require.NoError(t, err)
 
@@ -38,7 +38,7 @@ func TestUpdateToolchainWhenRequested(t *testing.T) {
 	_, err := update(Config{
 		GoModPath:       path,
 		UpdateToolchain: true,
-		ReleasesJSON:    releasesJSON,
+		hooks:           releaseHooks(t),
 	})
 	require.NoError(t, err)
 
@@ -51,8 +51,8 @@ func TestLeaveCurrentGoModUnchanged(t *testing.T) {
 	path := writeTempGoMod(t, original)
 
 	result, err := update(Config{
-		GoModPath:    path,
-		ReleasesJSON: releasesJSON,
+		GoModPath: path,
+		hooks:     releaseHooks(t),
 	})
 	require.NoError(t, err)
 
@@ -106,4 +106,14 @@ func readFile(t *testing.T, path string) string {
 	require.NoError(t, err)
 
 	return string(contents)
+}
+
+func releaseHooks(t *testing.T) hooks {
+	t.Helper()
+
+	return hooks{
+		fetchReleases: func() ([]byte, error) {
+			return []byte(releasesJSON), nil
+		},
+	}
 }
