@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -10,16 +9,15 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	config := updater.Config{
+	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	if err := updater.Run(updater.Config{
 		GoModPath:       getenv("INPUT_GO_MOD_PATH", "go.mod"),
 		UpdateToolchain: parseBool(getenv("INPUT_UPDATE_TOOLCHAIN", "false")),
 		GitHubOutput:    os.Getenv("GITHUB_OUTPUT"),
-		Logger:          logger,
-	}
-
-	if err := updater.Run(config); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		Logger:          log,
+	}); err != nil {
+		log.Error("update go.mod", "error", err)
 		os.Exit(1)
 	}
 }
