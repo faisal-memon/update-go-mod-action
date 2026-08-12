@@ -52,20 +52,15 @@ func Run(config Config) error {
 		return err
 	}
 
-	logger := config.Logger
-	if logger == nil {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
-	}
-
 	if result.Changed {
-		logger.Info(
+		config.Logger.Info(
 			"updated go.mod",
 			"path", config.GoModPath,
 			"previous_version", result.PreviousVersion,
 			"latest_version", result.LatestVersion,
 		)
 	} else {
-		logger.Info(
+		config.Logger.Info(
 			"go.mod is already on the latest stable Go version",
 			"path", config.GoModPath,
 			"current_version", result.PreviousVersion,
