@@ -17,8 +17,8 @@ import (
 const goReleasesURL = "https://go.dev/dl/?mode=json"
 
 var (
-	goLineRE        = regexp.MustCompile(`^(\s*)go\s+(\S+)\s*$`)
-	toolchainLineRE = regexp.MustCompile(`^(\s*)toolchain\s+go(\S+)\s*$`)
+	goLineRE        = regexp.MustCompile(`(?m)^([ \t]*)go[ \t]+([^ \t\r\n]+)[ \t]*$`)
+	toolchainLineRE = regexp.MustCompile(`(?m)^([ \t]*)toolchain[ \t]+go([^ \t\r\n]+)[ \t]*$`)
 )
 
 type Config struct {
@@ -72,7 +72,7 @@ func Run(config Config) error {
 
 func update(config Config) (Result, error) {
 	if config.GoModPath == "" {
-		config.GoModPath = "go.mod"
+		return Result{}, fmt.Errorf("go.mod path is required")
 	}
 
 	contents, err := os.ReadFile(config.GoModPath)
@@ -81,30 +81,8 @@ func update(config Config) (Result, error) {
 	}
 
 	original := string(contents)
-	lines := strings.Split(strings.TrimSuffix(original, "\n"), "\n")
-	if original == "" {
-		lines = []string{}
-	}
-
-	goLineIndex := -1
-	toolchainLineIndex := -1
-	previousVersion := ""
-
-	for index, line := range lines {
-		if goLineIndex == -1 {
-			if match := goLineRE.FindStringSubmatch(line); match != nil {
-				goLineIndex = index
-				previousVersion = match[2]
-				continue
-			}
-		}
-
-		if toolchainLineIndex == -1 && toolchainLineRE.MatchString(line) {
-			toolchainLineIndex = index
-		}
-	}
-
-	if goLineIndex == -1 {
+	goDirective, ok := findDirective(original, goLineRE)
+	if !ok {
 		return Result{}, fmt.Errorf(`could not find a "go" directive in %s`, config.GoModPath)
 	}
 
@@ -113,6 +91,7 @@ func update(config Config) (Result, error) {
 		return Result{}, err
 	}
 
+	previousVersion := goDirective.version
 	changed, err := versionLess(previousVersion, latestVersion)
 	if err != nil {
 		return Result{}, err
@@ -120,17 +99,12 @@ func update(config Config) (Result, error) {
 
 	currentVersion := previousVersion
 	if changed {
-		goMatch := goLineRE.FindStringSubmatch(lines[goLineIndex])
-		lines[goLineIndex] = fmt.Sprintf("%sgo %s", goMatch[1], latestVersion)
+		updated := replaceDirective(original, goDirective, fmt.Sprintf("%sgo %s", goDirective.indent, latestVersion))
 
-		if config.UpdateToolchain && toolchainLineIndex != -1 {
-			toolchainMatch := toolchainLineRE.FindStringSubmatch(lines[toolchainLineIndex])
-			lines[toolchainLineIndex] = fmt.Sprintf("%stoolchain go%s", toolchainMatch[1], latestVersion)
-		}
-
-		updated := strings.Join(lines, "\n")
-		if strings.HasSuffix(original, "\n") {
-			updated += "\n"
+		if config.UpdateToolchain {
+			if toolchainDirective, ok := findDirective(updated, toolchainLineRE); ok {
+				updated = replaceDirective(updated, toolchainDirective, fmt.Sprintf("%stoolchain go%s", toolchainDirective.indent, latestVersion))
+			}
 		}
 
 		if err := os.WriteFile(config.GoModPath, []byte(updated), 0o644); err != nil {
@@ -146,6 +120,31 @@ func update(config Config) (Result, error) {
 		CurrentVersion:  currentVersion,
 		LatestVersion:   latestVersion,
 	}, nil
+}
+
+type directive struct {
+	start   int
+	end     int
+	indent  string
+	version string
+}
+
+func findDirective(contents string, expression *regexp.Regexp) (directive, bool) {
+	match := expression.FindStringSubmatchIndex(contents)
+	if match == nil {
+		return directive{}, false
+	}
+
+	return directive{
+		start:   match[0],
+		end:     match[1],
+		indent:  contents[match[2]:match[3]],
+		version: contents[match[4]:match[5]],
+	}, true
+}
+
+func replaceDirective(contents string, directive directive, replacement string) string {
+	return contents[:directive.start] + replacement + contents[directive.end:]
 }
 
 func latestStableVersion(config Config) (string, error) {
