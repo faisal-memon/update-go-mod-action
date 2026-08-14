@@ -26,7 +26,7 @@ type Config struct {
 }
 
 type hooks struct {
-	fetchReleases func() ([]byte, error)
+	latestStableVersion func() (string, error)
 }
 
 type Result struct {

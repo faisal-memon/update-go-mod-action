@@ -17,6 +17,10 @@ type Release struct {
 }
 
 func latestStableVersion(config Config) (string, error) {
+	if config.hooks.latestStableVersion != nil {
+		return config.hooks.latestStableVersion()
+	}
+
 	releases, err := loadReleases(config)
 	if err != nil {
 		return "", err
@@ -51,33 +55,24 @@ func latestStableVersion(config Config) (string, error) {
 }
 
 func loadReleases(config Config) ([]Release, error) {
-	var data []byte
-	if config.hooks.fetchReleases != nil {
-		var err error
-		data, err = config.hooks.fetchReleases()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		client := config.HTTPClient
-		if client == nil {
-			client = &http.Client{Timeout: 30 * time.Second}
-		}
+	client := config.HTTPClient
+	if client == nil {
+		client = &http.Client{Timeout: 30 * time.Second}
+	}
 
-		response, err := client.Get(goReleasesURL)
-		if err != nil {
-			return nil, fmt.Errorf("fetch Go releases: %w", err)
-		}
-		defer response.Body.Close()
+	response, err := client.Get(goReleasesURL)
+	if err != nil {
+		return nil, fmt.Errorf("fetch Go releases: %w", err)
+	}
+	defer response.Body.Close()
 
-		if response.StatusCode < 200 || response.StatusCode > 299 {
-			return nil, fmt.Errorf("fetch Go releases: unexpected HTTP status %s", response.Status)
-		}
+	if response.StatusCode < 200 || response.StatusCode > 299 {
+		return nil, fmt.Errorf("fetch Go releases: unexpected HTTP status %s", response.Status)
+	}
 
-		data, err = io.ReadAll(response.Body)
-		if err != nil {
-			return nil, fmt.Errorf("read Go releases response: %w", err)
-		}
+	data, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read Go releases response: %w", err)
 	}
 
 	var releases []Release

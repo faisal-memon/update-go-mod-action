@@ -9,18 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const releasesJSON = `[
-  {"version":"go1.25.1","stable":true},
-  {"version":"go1.26.0","stable":true},
-  {"version":"go1.27rc1","stable":false}
-]`
-
 func TestUpdateGoDirective(t *testing.T) {
 	path := writeTempGoMod(t, "module example.com/app\n\ngo 1.25.0\n")
 
 	result, err := update(Config{
 		GoModPath: path,
-		hooks:     releaseHooks(t),
+		hooks:     versionHooks("1.26.0"),
 	})
 	require.NoError(t, err)
 
@@ -38,7 +32,7 @@ func TestUpdateToolchainWhenRequested(t *testing.T) {
 	_, err := update(Config{
 		GoModPath:       path,
 		UpdateToolchain: true,
-		hooks:           releaseHooks(t),
+		hooks:           versionHooks("1.26.0"),
 	})
 	require.NoError(t, err)
 
@@ -52,7 +46,7 @@ func TestLeaveCurrentGoModUnchanged(t *testing.T) {
 
 	result, err := update(Config{
 		GoModPath: path,
-		hooks:     releaseHooks(t),
+		hooks:     versionHooks("1.26.0"),
 	})
 	require.NoError(t, err)
 
@@ -108,12 +102,10 @@ func readFile(t *testing.T, path string) string {
 	return string(contents)
 }
 
-func releaseHooks(t *testing.T) hooks {
-	t.Helper()
-
+func versionHooks(version string) hooks {
 	return hooks{
-		fetchReleases: func() ([]byte, error) {
-			return []byte(releasesJSON), nil
+		latestStableVersion: func() (string, error) {
+			return version, nil
 		},
 	}
 }
