@@ -1,0 +1,89 @@
+package updater
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
+)
+
+const goReleasesURL = "https://go.dev/dl/?mode=json"
+
+type Release struct {
+	Version string `json:"version"`
+	Stable  bool   `json:"stable"`
+}
+
+func latestStableVersion(config Config) (string, error) {
+	releases, err := loadReleases(config)
+	if err != nil {
+		return "", err
+	}
+
+	latest := ""
+	for _, release := range releases {
+		if !release.Stable || !strings.HasPrefix(release.Version, "go") {
+			continue
+		}
+
+		version := strings.TrimPrefix(release.Version, "go")
+		if latest == "" {
+			latest = version
+			continue
+		}
+
+		less, err := versionLess(latest, version)
+		if err != nil {
+			return "", err
+		}
+		if less {
+			latest = version
+		}
+	}
+
+	if latest == "" {
+		return "", fmt.Errorf("no stable Go releases found from go.dev")
+	}
+
+	return latest, nil
+}
+
+func loadReleases(config Config) ([]Release, error) {
+	var data []byte
+	if config.hooks.fetchReleases != nil {
+		var err error
+		data, err = config.hooks.fetchReleases()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		client := config.HTTPClient
+		if client == nil {
+			client = &http.Client{Timeout: 30 * time.Second}
+		}
+
+		response, err := client.Get(goReleasesURL)
+		if err != nil {
+			return nil, fmt.Errorf("fetch Go releases: %w", err)
+		}
+		defer response.Body.Close()
+
+		if response.StatusCode < 200 || response.StatusCode > 299 {
+			return nil, fmt.Errorf("fetch Go releases: unexpected HTTP status %s", response.Status)
+		}
+
+		data, err = io.ReadAll(response.Body)
+		if err != nil {
+			return nil, fmt.Errorf("read Go releases response: %w", err)
+		}
+	}
+
+	var releases []Release
+	if err := json.Unmarshal(data, &releases); err != nil {
+		return nil, fmt.Errorf("parse Go releases JSON: %w", err)
+	}
+
+	return releases, nil
+}
