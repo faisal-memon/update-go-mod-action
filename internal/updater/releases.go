@@ -17,10 +17,6 @@ type Release struct {
 }
 
 func latestStableVersion(config Config) (string, error) {
-	if config.hooks.latestStableVersion != nil {
-		return config.hooks.latestStableVersion()
-	}
-
 	releases, err := loadReleases(config)
 	if err != nil {
 		return "", err

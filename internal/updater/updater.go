@@ -37,6 +37,8 @@ type Result struct {
 }
 
 func Run(config Config) error {
+	config = config.withDefaults()
+
 	result, err := update(config)
 	if err != nil {
 		return err
@@ -61,6 +63,8 @@ func Run(config Config) error {
 }
 
 func update(config Config) (Result, error) {
+	config = config.withDefaults()
+
 	if config.GoModPath == "" {
 		return Result{}, fmt.Errorf("go.mod path is required")
 	}
@@ -76,7 +80,7 @@ func update(config Config) (Result, error) {
 		return Result{}, fmt.Errorf(`could not find a "go" directive in %s`, config.GoModPath)
 	}
 
-	latestVersion, err := latestStableVersion(config)
+	latestVersion, err := config.hooks.latestStableVersion()
 	if err != nil {
 		return Result{}, err
 	}
@@ -110,6 +114,16 @@ func update(config Config) (Result, error) {
 		CurrentVersion:  currentVersion,
 		LatestVersion:   latestVersion,
 	}, nil
+}
+
+func (config Config) withDefaults() Config {
+	if config.hooks.latestStableVersion == nil {
+		config.hooks.latestStableVersion = func() (string, error) {
+			return latestStableVersion(config)
+		}
+	}
+
+	return config
 }
 
 type directive struct {
