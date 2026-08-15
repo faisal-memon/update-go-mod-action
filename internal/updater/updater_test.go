@@ -1,6 +1,8 @@
 package updater
 
 import (
+	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,29 +13,22 @@ import (
 
 func TestUpdateGoDirective(t *testing.T) {
 	path := writeTempGoMod(t, "module example.com/app\n\ngo 1.25.0\n")
+	outputPath := filepath.Join(t.TempDir(), "github_output")
 
-	result, err := update(Config{
-		GoModPath: path,
-		hooks:     versionHooks("1.26.0"),
-	})
+	err := Run(testConfig(path, outputPath, versionHooks("1.26.0")))
 	require.NoError(t, err)
-
-	assert.True(t, result.Changed)
-	assert.Equal(t, "1.25.0", result.PreviousVersion)
-	assert.Equal(t, "1.26.0", result.CurrentVersion)
 
 	contents := readFile(t, path)
 	assert.Contains(t, contents, "go 1.26.0\n")
+	assert.Equal(t, "changed=true\nprevious-version=1.25.0\ncurrent-version=1.26.0\nlatest-version=1.26.0\n", readFile(t, outputPath))
 }
 
 func TestUpdateToolchainWhenRequested(t *testing.T) {
 	path := writeTempGoMod(t, "module example.com/app\n\ngo 1.25.0\ntoolchain go1.25.0\n")
 
-	_, err := update(Config{
-		GoModPath:       path,
-		UpdateToolchain: true,
-		hooks:           versionHooks("1.26.0"),
-	})
+	config := testConfig(path, "", versionHooks("1.26.0"))
+	config.UpdateToolchain = true
+	err := Run(config)
 	require.NoError(t, err)
 
 	contents := readFile(t, path)
@@ -43,25 +38,20 @@ func TestUpdateToolchainWhenRequested(t *testing.T) {
 func TestLeaveCurrentGoModUnchanged(t *testing.T) {
 	original := "module example.com/app\n\ngo 1.26.0\n"
 	path := writeTempGoMod(t, original)
+	outputPath := filepath.Join(t.TempDir(), "github_output")
 
-	result, err := update(Config{
-		GoModPath: path,
-		hooks:     versionHooks("1.26.0"),
-	})
+	err := Run(testConfig(path, outputPath, versionHooks("1.26.0")))
 	require.NoError(t, err)
 
-	assert.False(t, result.Changed)
 	assert.Equal(t, original, readFile(t, path))
+	assert.Equal(t, "changed=false\nprevious-version=1.26.0\ncurrent-version=1.26.0\nlatest-version=1.26.0\n", readFile(t, outputPath))
 }
 
 func TestUpdatePreservesGoModPermissions(t *testing.T) {
 	path := writeTempGoMod(t, "module example.com/app\n\ngo 1.25.0\n")
 	require.NoError(t, os.Chmod(path, 0o600))
 
-	_, err := update(Config{
-		GoModPath: path,
-		hooks:     versionHooks("1.26.0"),
-	})
+	err := Run(testConfig(path, "", versionHooks("1.26.0")))
 	require.NoError(t, err)
 
 	fileInfo, err := os.Stat(path)
@@ -72,12 +62,7 @@ func TestUpdatePreservesGoModPermissions(t *testing.T) {
 func TestWriteGitHubOutputs(t *testing.T) {
 	outputPath := filepath.Join(t.TempDir(), "github_output")
 
-	err := writeOutputs(outputPath, Result{
-		Changed:         true,
-		PreviousVersion: "1.25.0",
-		CurrentVersion:  "1.26.0",
-		LatestVersion:   "1.26.0",
-	})
+	err := writeOutputs(outputPath, true, "1.25.0", "1.26.0", "1.26.0")
 	require.NoError(t, err)
 
 	contents := readFile(t, outputPath)
@@ -122,5 +107,14 @@ func versionHooks(version string) hooks {
 		latestStableVersion: func() (string, error) {
 			return version, nil
 		},
+	}
+}
+
+func testConfig(goModPath, outputPath string, hooks hooks) Config {
+	return Config{
+		GoModPath:    goModPath,
+		GitHubOutput: outputPath,
+		Logger:       slog.New(slog.NewTextHandler(io.Discard, nil)),
+		hooks:        hooks,
 	}
 }

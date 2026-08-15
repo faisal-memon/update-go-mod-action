@@ -29,71 +29,38 @@ type hooks struct {
 	latestStableVersion func() (string, error)
 }
 
-type Result struct {
-	Changed         bool
-	PreviousVersion string
-	CurrentVersion  string
-	LatestVersion   string
-}
-
 func Run(config Config) error {
 	config = config.withDefaults()
 
-	result, err := update(config)
-	if err != nil {
-		return err
-	}
-
-	if result.Changed {
-		config.Logger.Info(
-			"updated go.mod",
-			"path", config.GoModPath,
-			"previous_version", result.PreviousVersion,
-			"latest_version", result.LatestVersion,
-		)
-	} else {
-		config.Logger.Info(
-			"go.mod is already on the latest stable Go version",
-			"path", config.GoModPath,
-			"current_version", result.PreviousVersion,
-		)
-	}
-
-	return writeOutputs(config.GitHubOutput, result)
-}
-
-func update(config Config) (Result, error) {
-	config = config.withDefaults()
-
 	if config.GoModPath == "" {
-		return Result{}, fmt.Errorf("go.mod path is required")
+		return fmt.Errorf("go.mod path is required")
 	}
 
 	contents, err := os.ReadFile(config.GoModPath)
 	if err != nil {
-		return Result{}, fmt.Errorf("read go.mod: %w", err)
+		return fmt.Errorf("read go.mod: %w", err)
 	}
 
 	fileInfo, err := os.Stat(config.GoModPath)
 	if err != nil {
-		return Result{}, fmt.Errorf("stat go.mod: %w", err)
+		return fmt.Errorf("stat go.mod: %w", err)
 	}
 
 	original := string(contents)
 	goDirective, ok := findDirective(original, goLineRE)
 	if !ok {
-		return Result{}, fmt.Errorf(`could not find a "go" directive in %s`, config.GoModPath)
+		return fmt.Errorf(`could not find a "go" directive in %s`, config.GoModPath)
 	}
 
 	latestVersion, err := config.hooks.latestStableVersion()
 	if err != nil {
-		return Result{}, err
+		return err
 	}
 
 	previousVersion := goDirective.version
 	changed, err := versionLess(previousVersion, latestVersion)
 	if err != nil {
-		return Result{}, err
+		return err
 	}
 
 	currentVersion := previousVersion
@@ -107,18 +74,26 @@ func update(config Config) (Result, error) {
 		}
 
 		if err := os.WriteFile(config.GoModPath, []byte(updated), fileInfo.Mode().Perm()); err != nil {
-			return Result{}, fmt.Errorf("write go.mod: %w", err)
+			return fmt.Errorf("write go.mod: %w", err)
 		}
 
 		currentVersion = latestVersion
+
+		config.Logger.Info(
+			"updated go.mod",
+			"path", config.GoModPath,
+			"previous_version", previousVersion,
+			"latest_version", latestVersion,
+		)
+	} else {
+		config.Logger.Info(
+			"go.mod is already on the latest stable Go version",
+			"path", config.GoModPath,
+			"current_version", previousVersion,
+		)
 	}
 
-	return Result{
-		Changed:         changed,
-		PreviousVersion: previousVersion,
-		CurrentVersion:  currentVersion,
-		LatestVersion:   latestVersion,
-	}, nil
+	return writeOutputs(config.GitHubOutput, changed, previousVersion, currentVersion, latestVersion)
 }
 
 func (config Config) withDefaults() Config {
@@ -188,7 +163,7 @@ func toSemver(version string) (string, error) {
 	return cleaned, nil
 }
 
-func writeOutputs(path string, result Result) error {
+func writeOutputs(path string, changed bool, previousVersion, currentVersion, latestVersion string) error {
 	if path == "" {
 		return nil
 	}
@@ -201,10 +176,10 @@ func writeOutputs(path string, result Result) error {
 	if _, err := fmt.Fprintf(
 		file,
 		"changed=%t\nprevious-version=%s\ncurrent-version=%s\nlatest-version=%s\n",
-		result.Changed,
-		result.PreviousVersion,
-		result.CurrentVersion,
-		result.LatestVersion,
+		changed,
+		previousVersion,
+		currentVersion,
+		latestVersion,
 	); err != nil {
 		return fmt.Errorf("write GitHub outputs: %w", err)
 	}
