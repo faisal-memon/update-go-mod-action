@@ -193,20 +193,24 @@ func writeOutputs(path string, result Result) error {
 		return nil
 	}
 
-	output := strings.Builder{}
-	output.WriteString(fmt.Sprintf("changed=%t\n", result.Changed))
-	output.WriteString(fmt.Sprintf("previous-version=%s\n", result.PreviousVersion))
-	output.WriteString(fmt.Sprintf("current-version=%s\n", result.CurrentVersion))
-	output.WriteString(fmt.Sprintf("latest-version=%s\n", result.LatestVersion))
-
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return fmt.Errorf("open GitHub output file: %w", err)
 	}
-	defer file.Close()
 
-	if _, err := file.WriteString(output.String()); err != nil {
+	if _, err := fmt.Fprintf(
+		file,
+		"changed=%t\nprevious-version=%s\ncurrent-version=%s\nlatest-version=%s\n",
+		result.Changed,
+		result.PreviousVersion,
+		result.CurrentVersion,
+		result.LatestVersion,
+	); err != nil {
 		return fmt.Errorf("write GitHub outputs: %w", err)
+	}
+
+	if err := file.Close(); err != nil {
+		return fmt.Errorf("close GitHub output file: %w", err)
 	}
 
 	return nil

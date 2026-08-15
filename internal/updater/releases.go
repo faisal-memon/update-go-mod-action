@@ -63,7 +63,9 @@ func loadReleases(config Config) ([]Release, error) {
 	if err != nil {
 		return nil, fmt.Errorf("fetch Go releases: %w", err)
 	}
-	defer response.Body.Close()
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	if response.StatusCode < 200 || response.StatusCode > 299 {
 		return nil, fmt.Errorf("fetch Go releases: unexpected HTTP status %s", response.Status)
