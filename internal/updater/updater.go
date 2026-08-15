@@ -32,21 +32,11 @@ type hooks struct {
 func Run(config Config) error {
 	config = config.withDefaults()
 
-	if config.GoModPath == "" {
-		return fmt.Errorf("go.mod path is required")
-	}
-
-	contents, err := os.ReadFile(config.GoModPath)
+	original, fileInfo, err := readGoMod(config.GoModPath)
 	if err != nil {
-		return fmt.Errorf("read go.mod: %w", err)
+		return err
 	}
 
-	fileInfo, err := os.Stat(config.GoModPath)
-	if err != nil {
-		return fmt.Errorf("stat go.mod: %w", err)
-	}
-
-	original := string(contents)
 	goDirective, ok := findDirective(original, goLineRE)
 	if !ok {
 		return fmt.Errorf(`could not find a "go" directive in %s`, config.GoModPath)
@@ -58,11 +48,12 @@ func Run(config Config) error {
 	}
 
 	previousVersion := goDirective.version
-	changed, err := versionLess(previousVersion, latestVersion)
+	comparison, err := semverCompare(previousVersion, latestVersion)
 	if err != nil {
 		return err
 	}
 
+	changed := comparison < 0
 	currentVersion := previousVersion
 	if changed {
 		updated := replaceDirective(original, goDirective, fmt.Sprintf("%sgo %s", goDirective.indent, latestVersion))
@@ -94,6 +85,20 @@ func Run(config Config) error {
 	}
 
 	return writeOutputs(config.GitHubOutput, changed, previousVersion, currentVersion, latestVersion)
+}
+
+func readGoMod(path string) (string, os.FileInfo, error) {
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return "", nil, fmt.Errorf("read go.mod: %w", err)
+	}
+
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return "", nil, fmt.Errorf("stat go.mod: %w", err)
+	}
+
+	return string(contents), fileInfo, nil
 }
 
 func (config Config) withDefaults() Config {
@@ -131,18 +136,18 @@ func replaceDirective(contents string, directive directive, replacement string) 
 	return contents[:directive.start] + replacement + contents[directive.end:]
 }
 
-func versionLess(left, right string) (bool, error) {
+func semverCompare(left, right string) (int, error) {
 	leftVersion, err := toSemver(left)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
 	rightVersion, err := toSemver(right)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
-	return semver.Compare(leftVersion, rightVersion) < 0, nil
+	return semver.Compare(leftVersion, rightVersion), nil
 }
 
 func toSemver(version string) (string, error) {

@@ -70,15 +70,15 @@ func TestWriteGitHubOutputs(t *testing.T) {
 	assert.Equal(t, want, contents)
 }
 
-func TestVersionLessNormalizesGoVersions(t *testing.T) {
-	less, err := versionLess("go1.25.9", "1.26.0")
+func TestSemverCompareNormalizesGoVersions(t *testing.T) {
+	comparison, err := semverCompare("go1.25.9", "1.26.0")
 	require.NoError(t, err)
 
-	assert.True(t, less)
+	assert.Negative(t, comparison)
 }
 
-func TestVersionLessRejectsInvalidVersion(t *testing.T) {
-	_, err := versionLess("not-a-version", "1.26.0")
+func TestSemverCompareRejectsInvalidVersion(t *testing.T) {
+	_, err := semverCompare("not-a-version", "1.26.0")
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid Go version")

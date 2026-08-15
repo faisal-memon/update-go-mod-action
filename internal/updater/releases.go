@@ -37,11 +37,11 @@ func latestStableVersion(config Config) (string, error) {
 			continue
 		}
 
-		less, err := versionLess(latest, version)
+		comparison, err := semverCompare(latest, version)
 		if err != nil {
 			return "", err
 		}
-		if less {
+		if comparison < 0 {
 			latest = version
 		}
 	}
