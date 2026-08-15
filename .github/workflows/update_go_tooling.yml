@@ -27,6 +27,14 @@ jobs:
           update-version-file: "true"
           version-file-path: .versions
 
+      - name: Run go mod tidy
+        if: steps.update-go.outputs.changed == 'true'
+        run: make tidy
+
+      - name: Run lint fix
+        if: steps.update-golangci-lint.outputs.changed == 'true'
+        run: make lint-fix
+
       - name: Create pull request
         if: steps.update-go.outputs.changed == 'true' || steps.update-golangci-lint.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7

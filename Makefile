@@ -8,7 +8,7 @@ TOOLS_DIR := .tools
 GOLANGCI_LINT_DIR := $(TOOLS_DIR)/golangci-lint/$(GOLANGCI_LINT_VERSION)
 GOLANGCI_LINT_BIN := $(GOLANGCI_LINT_DIR)/golangci-lint
 
-.PHONY: lint lint-fix test
+.PHONY: lint lint-fix test tidy
 
 lint: $(GOLANGCI_LINT_BIN)
 	@test -z "$$($(GOFMT) -l .)"
@@ -20,6 +20,9 @@ lint-fix: $(GOLANGCI_LINT_BIN)
 
 test:
 	@$(GO) test ./...
+
+tidy:
+	@$(GO) mod tidy
 
 $(GOLANGCI_LINT_BIN):
 	@echo "Installing golangci-lint $(GOLANGCI_LINT_VERSION)..."
