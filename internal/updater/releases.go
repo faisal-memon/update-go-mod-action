@@ -14,7 +14,7 @@ const (
 	goReleasesTimeout = 30 * time.Second
 )
 
-type Release struct {
+type release struct {
 	Version string `json:"version"`
 	Stable  bool   `json:"stable"`
 }
@@ -55,7 +55,7 @@ func latestStableVersion(config Config) (string, error) {
 }
 
 // loadReleases fetches and parses the Go release metadata from go.dev.
-func loadReleases(config Config) ([]Release, error) {
+func loadReleases(config Config) ([]release, error) {
 	client := config.HTTPClient
 	if client == nil {
 		client = &http.Client{Timeout: goReleasesTimeout}
@@ -78,7 +78,7 @@ func loadReleases(config Config) ([]Release, error) {
 		return nil, fmt.Errorf("read Go releases response: %w", err)
 	}
 
-	var releases []Release
+	var releases []release
 	if err := json.Unmarshal(data, &releases); err != nil {
 		return nil, fmt.Errorf("parse Go releases JSON: %w", err)
 	}

@@ -1,3 +1,4 @@
+// Package updater updates the Go version declared by a go.mod file.
 package updater
 
 import (
@@ -13,6 +14,7 @@ var (
 	toolchainLineRE = regexp.MustCompile(`(?m)^([ \t]*)toolchain[ \t]+go([^ \t\r\n]+)[ \t]*$`)
 )
 
+// Config controls how Run reads, updates, and reports changes to go.mod.
 type Config struct {
 	GoModPath       string
 	UpdateToolchain bool

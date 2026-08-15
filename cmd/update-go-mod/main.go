@@ -1,3 +1,4 @@
+// Package main runs the update-go-mod GitHub Action.
 package main
 
 import (
