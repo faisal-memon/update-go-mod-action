@@ -44,7 +44,7 @@ func TestLeaveCurrentGoModUnchanged(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, original, readFile(t, path))
-	assert.Equal(t, "changed=false\nprevious-version=1.26.0\nupdated-version=1.26.0\n", readFile(t, outputPath))
+	assert.Equal(t, "changed=false\n", readFile(t, outputPath))
 }
 
 func TestUpdatePreservesGoModPermissions(t *testing.T) {
@@ -68,6 +68,16 @@ func TestWriteGitHubOutputs(t *testing.T) {
 	contents := readFile(t, outputPath)
 	want := "changed=true\nprevious-version=1.25.0\nupdated-version=1.26.0\n"
 	assert.Equal(t, want, contents)
+}
+
+func TestWriteGitHubOutputsWithoutVersionsWhenUnchanged(t *testing.T) {
+	outputPath := filepath.Join(t.TempDir(), "github_output")
+
+	err := writeOutputs(outputPath, false, "1.26.0", "1.26.0")
+	require.NoError(t, err)
+
+	contents := readFile(t, outputPath)
+	assert.Equal(t, "changed=false\n", contents)
 }
 
 func TestSemverCompareNormalizesGoVersions(t *testing.T) {

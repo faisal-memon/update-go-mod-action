@@ -52,7 +52,6 @@ func Run(config Config) error {
 	}
 
 	changed := comparison < 0
-	updatedVersion := previousVersion
 	if changed {
 		updated := replaceDirective(original, goDirective, fmt.Sprintf("%sgo %s", goDirective.indent, latestVersion))
 
@@ -66,23 +65,21 @@ func Run(config Config) error {
 			return fmt.Errorf("write go.mod: %w", err)
 		}
 
-		updatedVersion = latestVersion
-
 		config.Logger.Info(
 			"updated go.mod",
 			"path", config.GoModPath,
 			"previous_version", previousVersion,
-			"updated_version", updatedVersion,
+			"updated_version", latestVersion,
 		)
 	} else {
 		config.Logger.Info(
 			"go.mod is already on the latest stable Go version",
 			"path", config.GoModPath,
-			"updated_version", updatedVersion,
+			"version", previousVersion,
 		)
 	}
 
-	return writeOutputs(config.GitHubOutput, changed, previousVersion, updatedVersion)
+	return writeOutputs(config.GitHubOutput, changed, previousVersion, latestVersion)
 }
 
 // readGoMod reads the go.mod file and returns its contents with file metadata.
@@ -151,12 +148,21 @@ func writeOutputs(path string, changed bool, previousVersion, updatedVersion str
 
 	if _, err := fmt.Fprintf(
 		file,
-		"changed=%t\nprevious-version=%s\nupdated-version=%s\n",
+		"changed=%t\n",
 		changed,
-		previousVersion,
-		updatedVersion,
 	); err != nil {
 		return fmt.Errorf("write GitHub outputs: %w", err)
+	}
+
+	if changed {
+		if _, err := fmt.Fprintf(
+			file,
+			"previous-version=%s\nupdated-version=%s\n",
+			previousVersion,
+			updatedVersion,
+		); err != nil {
+			return fmt.Errorf("write GitHub version outputs: %w", err)
+		}
 	}
 
 	if err := file.Close(); err != nil {

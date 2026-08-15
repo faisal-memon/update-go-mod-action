@@ -50,5 +50,5 @@ jobs:
 ## Outputs
 
 - `changed`: `true` when the action modified the target file
-- `previous-version`: the version originally declared by the `go` directive
-- `updated-version`: the version declared by the `go` directive after the action runs
+- `previous-version`: the version originally declared by the `go` directive when `changed` is `true`
+- `updated-version`: the version written to the `go` directive when `changed` is `true`
