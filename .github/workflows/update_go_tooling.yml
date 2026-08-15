@@ -27,6 +27,13 @@ jobs:
           update-version-file: "true"
           version-file-path: .versions
 
+      - name: Cache golangci-lint
+        if: steps.update-golangci-lint.outputs.changed == 'true'
+        uses: actions/cache@v5
+        with:
+          path: .tools/golangci-lint
+          key: ${{ runner.os }}-golangci-lint-${{ hashFiles('.versions') }}
+
       - name: Run go mod tidy
         if: steps.update-go.outputs.changed == 'true'
         run: make tidy
