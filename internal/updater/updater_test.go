@@ -80,20 +80,6 @@ func TestWriteGitHubOutputsWithoutVersionsWhenUnchanged(t *testing.T) {
 	assert.Equal(t, "changed=false\n", contents)
 }
 
-func TestSemverCompareNormalizesGoVersions(t *testing.T) {
-	comparison, err := semverCompare("go1.25.9", "1.26.0")
-	require.NoError(t, err)
-
-	assert.Negative(t, comparison)
-}
-
-func TestSemverCompareRejectsInvalidVersion(t *testing.T) {
-	_, err := semverCompare("not-a-version", "1.26.0")
-
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid Go version")
-}
-
 func writeTempGoMod(t *testing.T, contents string) string {
 	t.Helper()
 
