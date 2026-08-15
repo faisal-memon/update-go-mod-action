@@ -44,6 +44,6 @@ jobs:
           body: |
             Updates this action's Go toolchain metadata.
 
-            - go.mod Go version: `${{ steps.update-go.outputs.previous-version }}` -> `${{ steps.update-go.outputs.current-version }}`
+            - go.mod Go version: `${{ steps.update-go.outputs.previous-version }}` -> `${{ steps.update-go.outputs.updated-version }}`
             - golangci-lint version: `${{ steps.update-golangci-lint.outputs.previous-lint-version }}` -> `${{ steps.update-golangci-lint.outputs.current-lint-version }}`
           branch: chore/update-go-tooling

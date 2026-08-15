@@ -35,11 +35,11 @@ jobs:
         if: steps.update.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: Update Go version to ${{ steps.update.outputs.latest-version }}
-          title: Update Go version to ${{ steps.update.outputs.latest-version }}
+          commit-message: Update Go version to ${{ steps.update.outputs.updated-version }}
+          title: Update Go version to ${{ steps.update.outputs.updated-version }}
           body: |
             Updates the go.mod Go version to the latest stable release.
-          branch: chore/update-go-${{ steps.update.outputs.latest-version }}
+          branch: chore/update-go-${{ steps.update.outputs.updated-version }}
 ```
 
 ## Inputs
@@ -51,5 +51,4 @@ jobs:
 
 - `changed`: `true` when the action modified the target file
 - `previous-version`: the version originally declared by the `go` directive
-- `current-version`: the version declared after the action runs
-- `latest-version`: the latest stable Go version found from `go.dev`
+- `updated-version`: the version declared by the `go` directive after the action runs

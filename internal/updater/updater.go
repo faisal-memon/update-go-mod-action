@@ -51,7 +51,7 @@ func Run(config Config) error {
 	}
 
 	changed := comparison < 0
-	currentVersion := previousVersion
+	updatedVersion := previousVersion
 	if changed {
 		updated := replaceDirective(original, goDirective, fmt.Sprintf("%sgo %s", goDirective.indent, latestVersion))
 
@@ -65,23 +65,23 @@ func Run(config Config) error {
 			return fmt.Errorf("write go.mod: %w", err)
 		}
 
-		currentVersion = latestVersion
+		updatedVersion = latestVersion
 
 		config.Logger.Info(
 			"updated go.mod",
 			"path", config.GoModPath,
 			"previous_version", previousVersion,
-			"latest_version", latestVersion,
+			"updated_version", updatedVersion,
 		)
 	} else {
 		config.Logger.Info(
 			"go.mod is already on the latest stable Go version",
 			"path", config.GoModPath,
-			"current_version", previousVersion,
+			"updated_version", updatedVersion,
 		)
 	}
 
-	return writeOutputs(config.GitHubOutput, changed, previousVersion, currentVersion, latestVersion)
+	return writeOutputs(config.GitHubOutput, changed, previousVersion, updatedVersion)
 }
 
 func readGoMod(path string) (string, os.FileInfo, error) {
@@ -133,7 +133,7 @@ func replaceDirective(contents string, directive directive, replacement string) 
 	return contents[:directive.start] + replacement + contents[directive.end:]
 }
 
-func writeOutputs(path string, changed bool, previousVersion, currentVersion, latestVersion string) error {
+func writeOutputs(path string, changed bool, previousVersion, updatedVersion string) error {
 	if path == "" {
 		return nil
 	}
@@ -145,11 +145,10 @@ func writeOutputs(path string, changed bool, previousVersion, currentVersion, la
 
 	if _, err := fmt.Fprintf(
 		file,
-		"changed=%t\nprevious-version=%s\ncurrent-version=%s\nlatest-version=%s\n",
+		"changed=%t\nprevious-version=%s\nupdated-version=%s\n",
 		changed,
 		previousVersion,
-		currentVersion,
-		latestVersion,
+		updatedVersion,
 	); err != nil {
 		return fmt.Errorf("write GitHub outputs: %w", err)
 	}

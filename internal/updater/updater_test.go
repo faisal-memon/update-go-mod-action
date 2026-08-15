@@ -20,7 +20,7 @@ func TestUpdateGoDirective(t *testing.T) {
 
 	contents := readFile(t, path)
 	assert.Contains(t, contents, "go 1.26.0\n")
-	assert.Equal(t, "changed=true\nprevious-version=1.25.0\ncurrent-version=1.26.0\nlatest-version=1.26.0\n", readFile(t, outputPath))
+	assert.Equal(t, "changed=true\nprevious-version=1.25.0\nupdated-version=1.26.0\n", readFile(t, outputPath))
 }
 
 func TestUpdateToolchainWhenRequested(t *testing.T) {
@@ -44,7 +44,7 @@ func TestLeaveCurrentGoModUnchanged(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, original, readFile(t, path))
-	assert.Equal(t, "changed=false\nprevious-version=1.26.0\ncurrent-version=1.26.0\nlatest-version=1.26.0\n", readFile(t, outputPath))
+	assert.Equal(t, "changed=false\nprevious-version=1.26.0\nupdated-version=1.26.0\n", readFile(t, outputPath))
 }
 
 func TestUpdatePreservesGoModPermissions(t *testing.T) {
@@ -62,11 +62,11 @@ func TestUpdatePreservesGoModPermissions(t *testing.T) {
 func TestWriteGitHubOutputs(t *testing.T) {
 	outputPath := filepath.Join(t.TempDir(), "github_output")
 
-	err := writeOutputs(outputPath, true, "1.25.0", "1.26.0", "1.26.0")
+	err := writeOutputs(outputPath, true, "1.25.0", "1.26.0")
 	require.NoError(t, err)
 
 	contents := readFile(t, outputPath)
-	want := "changed=true\nprevious-version=1.25.0\ncurrent-version=1.26.0\nlatest-version=1.26.0\n"
+	want := "changed=true\nprevious-version=1.25.0\nupdated-version=1.26.0\n"
 	assert.Equal(t, want, contents)
 }
 
