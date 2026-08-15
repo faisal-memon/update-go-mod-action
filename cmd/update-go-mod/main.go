@@ -22,6 +22,7 @@ func main() {
 	}
 }
 
+// getenv returns an environment variable value or a fallback when it is unset.
 func getenv(name, fallback string) string {
 	value := os.Getenv(name)
 	if value == "" {
@@ -30,6 +31,7 @@ func getenv(name, fallback string) string {
 	return value
 }
 
+// parseBool accepts common truthy input values used by GitHub Actions.
 func parseBool(value string) bool {
 	switch strings.ToLower(strings.TrimSpace(value)) {
 	case "1", "true", "yes", "on":

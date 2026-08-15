@@ -26,6 +26,7 @@ type hooks struct {
 	latestStableVersion func() (string, error)
 }
 
+// Run updates the configured go.mod file to the latest stable Go version.
 func Run(config Config) error {
 	config = config.withDefaults()
 
@@ -84,6 +85,7 @@ func Run(config Config) error {
 	return writeOutputs(config.GitHubOutput, changed, previousVersion, updatedVersion)
 }
 
+// readGoMod reads the go.mod file and returns its contents with file metadata.
 func readGoMod(path string) (string, os.FileInfo, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
@@ -98,6 +100,7 @@ func readGoMod(path string) (string, os.FileInfo, error) {
 	return string(contents), fileInfo, nil
 }
 
+// withDefaults fills optional config fields used by the updater runtime.
 func (config Config) withDefaults() Config {
 	if config.hooks.latestStableVersion == nil {
 		config.hooks.latestStableVersion = func() (string, error) {
@@ -115,6 +118,7 @@ type directive struct {
 	version string
 }
 
+// findDirective locates the first matching go.mod directive in the file contents.
 func findDirective(contents string, expression *regexp.Regexp) (directive, bool) {
 	match := expression.FindStringSubmatchIndex(contents)
 	if match == nil {
@@ -129,10 +133,12 @@ func findDirective(contents string, expression *regexp.Regexp) (directive, bool)
 	}, true
 }
 
+// replaceDirective replaces the matched directive while preserving surrounding content.
 func replaceDirective(contents string, directive directive, replacement string) string {
 	return contents[:directive.start] + replacement + contents[directive.end:]
 }
 
+// writeOutputs appends action outputs to the GitHub Actions output file.
 func writeOutputs(path string, changed bool, previousVersion, updatedVersion string) error {
 	if path == "" {
 		return nil

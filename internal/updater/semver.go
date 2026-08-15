@@ -7,6 +7,7 @@ import (
 	"golang.org/x/mod/semver"
 )
 
+// semverCompare compares two Go version strings using semantic version rules.
 func semverCompare(left, right string) (int, error) {
 	leftVersion, err := toSemver(left)
 	if err != nil {
@@ -21,6 +22,7 @@ func semverCompare(left, right string) (int, error) {
 	return semver.Compare(leftVersion, rightVersion), nil
 }
 
+// toSemver normalizes a Go version string into the format required by x/mod/semver.
 func toSemver(version string) (string, error) {
 	cleaned := strings.TrimSpace(version)
 	if cleaned == "" {

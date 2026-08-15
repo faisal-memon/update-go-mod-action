@@ -19,6 +19,7 @@ type Release struct {
 	Stable  bool   `json:"stable"`
 }
 
+// latestStableVersion returns the highest stable Go version published by go.dev.
 func latestStableVersion(config Config) (string, error) {
 	releases, err := loadReleases(config)
 	if err != nil {
@@ -53,6 +54,7 @@ func latestStableVersion(config Config) (string, error) {
 	return latest, nil
 }
 
+// loadReleases fetches and parses the Go release metadata from go.dev.
 func loadReleases(config Config) ([]Release, error) {
 	client := config.HTTPClient
 	if client == nil {
