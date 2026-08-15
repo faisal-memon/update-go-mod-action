@@ -54,6 +54,21 @@ func TestLeaveCurrentGoModUnchanged(t *testing.T) {
 	assert.Equal(t, original, readFile(t, path))
 }
 
+func TestUpdatePreservesGoModPermissions(t *testing.T) {
+	path := writeTempGoMod(t, "module example.com/app\n\ngo 1.25.0\n")
+	require.NoError(t, os.Chmod(path, 0o600))
+
+	_, err := update(Config{
+		GoModPath: path,
+		hooks:     versionHooks("1.26.0"),
+	})
+	require.NoError(t, err)
+
+	fileInfo, err := os.Stat(path)
+	require.NoError(t, err)
+	assert.Equal(t, os.FileMode(0o600), fileInfo.Mode().Perm())
+}
+
 func TestWriteGitHubOutputs(t *testing.T) {
 	outputPath := filepath.Join(t.TempDir(), "github_output")
 

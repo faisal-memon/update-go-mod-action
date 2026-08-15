@@ -9,7 +9,10 @@ import (
 	"time"
 )
 
-const goReleasesURL = "https://go.dev/dl/?mode=json"
+const (
+	goReleasesURL     = "https://go.dev/dl/?mode=json"
+	goReleasesTimeout = 30 * time.Second
+)
 
 type Release struct {
 	Version string `json:"version"`
@@ -53,7 +56,7 @@ func latestStableVersion(config Config) (string, error) {
 func loadReleases(config Config) ([]Release, error) {
 	client := config.HTTPClient
 	if client == nil {
-		client = &http.Client{Timeout: 30 * time.Second}
+		client = &http.Client{Timeout: goReleasesTimeout}
 	}
 
 	response, err := client.Get(goReleasesURL)

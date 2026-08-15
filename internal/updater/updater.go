@@ -74,6 +74,11 @@ func update(config Config) (Result, error) {
 		return Result{}, fmt.Errorf("read go.mod: %w", err)
 	}
 
+	fileInfo, err := os.Stat(config.GoModPath)
+	if err != nil {
+		return Result{}, fmt.Errorf("stat go.mod: %w", err)
+	}
+
 	original := string(contents)
 	goDirective, ok := findDirective(original, goLineRE)
 	if !ok {
@@ -101,7 +106,7 @@ func update(config Config) (Result, error) {
 			}
 		}
 
-		if err := os.WriteFile(config.GoModPath, []byte(updated), 0o644); err != nil {
+		if err := os.WriteFile(config.GoModPath, []byte(updated), fileInfo.Mode().Perm()); err != nil {
 			return Result{}, fmt.Errorf("write go.mod: %w", err)
 		}
 
