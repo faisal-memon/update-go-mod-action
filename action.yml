@@ -17,10 +17,10 @@ outputs:
     description: Whether the action updated go.mod.
     value: ${{ steps.update.outputs.changed }}
   previous-version:
-    description: The version previously declared in the go directive.
+    description: The version previously declared in the go directive when changed is true.
     value: ${{ steps.update.outputs.previous-version }}
   updated-version:
-    description: The version declared in the go directive after the action ran.
+    description: The version written to the go directive when changed is true.
     value: ${{ steps.update.outputs.updated-version }}
 
 runs:
