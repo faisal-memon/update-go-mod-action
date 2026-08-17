@@ -26,7 +26,11 @@ type Config struct {
 
 // Run updates the configured go.mod file to the latest stable Go version.
 func Run(config Config) error {
-	config = config.withDefaults()
+	if config.LatestStableVersion == nil {
+		config.LatestStableVersion = func() (string, error) {
+			return latestStableVersion(config)
+		}
+	}
 
 	original, fileInfo, err := readGoMod(config.GoModPath)
 	if err != nil {
@@ -93,17 +97,6 @@ func readGoMod(path string) (string, os.FileInfo, error) {
 	}
 
 	return string(contents), fileInfo, nil
-}
-
-// withDefaults fills optional config fields used by the updater runtime.
-func (config Config) withDefaults() Config {
-	if config.LatestStableVersion == nil {
-		config.LatestStableVersion = func() (string, error) {
-			return latestStableVersion(config)
-		}
-	}
-
-	return config
 }
 
 type directive struct {
