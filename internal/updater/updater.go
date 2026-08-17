@@ -21,15 +21,13 @@ type Config struct {
 	GitHubOutput        string
 	HTTPClient          *http.Client
 	Logger              *slog.Logger
-	LatestStableVersion func() (string, error)
+	LatestStableVersion func(Config) (string, error)
 }
 
 // Run updates the configured go.mod file to the latest stable Go version.
 func Run(config Config) error {
 	if config.LatestStableVersion == nil {
-		config.LatestStableVersion = func() (string, error) {
-			return latestStableVersion(config)
-		}
+		config.LatestStableVersion = latestStableVersion
 	}
 
 	original, fileInfo, err := readGoMod(config.GoModPath)
@@ -42,7 +40,7 @@ func Run(config Config) error {
 		return fmt.Errorf(`could not find a "go" directive in %s`, config.GoModPath)
 	}
 
-	latestVersion, err := config.LatestStableVersion()
+	latestVersion, err := config.LatestStableVersion(config)
 	if err != nil {
 		return err
 	}

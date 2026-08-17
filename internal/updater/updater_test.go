@@ -98,13 +98,13 @@ func readFile(t *testing.T, path string) string {
 	return string(contents)
 }
 
-func latestStableVersionHook(version string) func() (string, error) {
-	return func() (string, error) {
+func latestStableVersionHook(version string) func(Config) (string, error) {
+	return func(Config) (string, error) {
 		return version, nil
 	}
 }
 
-func testConfig(goModPath, outputPath string, latestStableVersion func() (string, error)) Config {
+func testConfig(goModPath, outputPath string, latestStableVersion func(Config) (string, error)) Config {
 	return Config{
 		GoModPath:           goModPath,
 		GitHubOutput:        outputPath,
