@@ -1,6 +1,6 @@
 module github.com/faisal-memon/update-go-mod-action
 
-go 1.26.5
+go 1.26.6
 
 require (
 	github.com/stretchr/testify v1.12.0
