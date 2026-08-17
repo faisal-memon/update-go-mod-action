@@ -16,11 +16,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Set up Go
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
-
       - name: Update go.mod
         id: update-go
         uses: ./
@@ -38,12 +33,6 @@ jobs:
         with:
           path: .tools/golangci-lint
           key: ${{ runner.os }}-golangci-lint-${{ hashFiles('.versions') }}
-
-      - name: Set up updated Go
-        if: steps.update-go.outputs.changed == 'true'
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
 
       - name: Run go mod tidy
         if: steps.update-go.outputs.changed == 'true'

@@ -40,6 +40,13 @@ runs:
         INPUT_UPDATE_TOOLCHAIN: ${{ inputs.update-toolchain }}
       run: go run "${{ github.action_path }}/cmd/update-go-mod"
 
+    - name: Set up updated Go
+      if: steps.update.outputs.changed == 'true'
+      uses: actions/setup-go@v7
+      with:
+        go-version-file: ${{ inputs.go-mod-path }}
+        cache: "false"
+
 branding:
   icon: upload-cloud
   color: blue
