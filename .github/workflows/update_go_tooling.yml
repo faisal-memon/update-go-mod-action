@@ -22,7 +22,7 @@ jobs:
 
       - name: Update golangci-lint
         id: update-golangci-lint
-        uses: faisal-memon/update-golangci-lint-action@main
+        uses: faisal-memon/update-golangci-lint-action@v1
         with:
           update-version-file: "true"
           version-file-path: .versions
