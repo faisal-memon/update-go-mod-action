@@ -1,6 +1,8 @@
 # update-go-mod-action
 
-Keeps `go.mod` up to date with latest stable Go release from `go.dev`:
+Keeps `go.mod` up to date with the latest stable Go release from `go.dev`.
+
+The action sets up Go with `actions/setup-go` and runs its Go implementation directly, so callers do not need to add a separate Go setup step before using it.
 
 ## Example
 
@@ -33,11 +35,11 @@ jobs:
         if: steps.update.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: Update Go version to ${{ steps.update.outputs.latest-version }}
-          title: Update Go version to ${{ steps.update.outputs.latest-version }}
+          commit-message: Update Go version to ${{ steps.update.outputs.updated-version }}
+          title: Update Go version to ${{ steps.update.outputs.updated-version }}
           body: |
             Updates the go.mod Go version to the latest stable release.
-          branch: chore/update-go-${{ steps.update.outputs.latest-version }}
+          branch: chore/update-go-${{ steps.update.outputs.updated-version }}
 ```
 
 ## Inputs
@@ -48,6 +50,5 @@ jobs:
 ## Outputs
 
 - `changed`: `true` when the action modified the target file
-- `previous-version`: the version originally declared by the `go` directive
-- `current-version`: the version declared after the action runs
-- `latest-version`: the latest stable Go version found from `go.dev`
+- `previous-version`: the version originally declared by the `go` directive when `changed` is `true`
+- `updated-version`: the version written to the `go` directive when `changed` is `true`

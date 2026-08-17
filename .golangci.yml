@@ -1,0 +1,25 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - dupword
+    - durationcheck
+    - errorlint
+    - gocritic
+    - loggercheck
+    - misspell
+    - nakedret
+    - nilerr
+    - nolintlint
+    - revive
+    - testifylint
+    - thelper
+    - unconvert
+    - wastedassign
+    - whitespace
+
+formatters:
+  enable:
+    - gofmt

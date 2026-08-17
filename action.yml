@@ -17,25 +17,28 @@ outputs:
     description: Whether the action updated go.mod.
     value: ${{ steps.update.outputs.changed }}
   previous-version:
-    description: The version previously declared in the go directive.
+    description: The version previously declared in the go directive when changed is true.
     value: ${{ steps.update.outputs.previous-version }}
-  current-version:
-    description: The version currently declared in the go directive after the action ran.
-    value: ${{ steps.update.outputs.current-version }}
-  latest-version:
-    description: The latest stable Go version discovered from go.dev.
-    value: ${{ steps.update.outputs.latest-version }}
+  updated-version:
+    description: The version written to the go directive when changed is true.
+    value: ${{ steps.update.outputs.updated-version }}
 
 runs:
   using: composite
   steps:
+    - name: Set up Go
+      uses: actions/setup-go@v7
+      with:
+        go-version-file: ${{ github.action_path }}/go.mod
+        cache: "false"
+
     - name: Update go.mod
       id: update
       shell: bash
       env:
         INPUT_GO_MOD_PATH: ${{ inputs.go-mod-path }}
         INPUT_UPDATE_TOOLCHAIN: ${{ inputs.update-toolchain }}
-      run: python3 "${{ github.action_path }}/update_go_mod.py"
+      run: go run "${{ github.action_path }}/cmd/update-go-mod"
 
 branding:
   icon: upload-cloud

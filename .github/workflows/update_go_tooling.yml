@@ -1,0 +1,56 @@
+name: Update Go Tooling
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-go-tooling:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Update go.mod
+        id: update-go
+        uses: ./
+
+      - name: Update golangci-lint
+        id: update-golangci-lint
+        uses: faisal-memon/update-golangci-lint-action@v1
+        with:
+          update-version-file: "true"
+          version-file-path: .versions
+
+      - name: Cache golangci-lint
+        if: steps.update-golangci-lint.outputs.changed == 'true'
+        uses: actions/cache@v5
+        with:
+          path: .tools/golangci-lint
+          key: ${{ runner.os }}-golangci-lint-${{ hashFiles('.versions') }}
+
+      - name: Run go mod tidy
+        if: steps.update-go.outputs.changed == 'true'
+        run: make tidy
+
+      - name: Run lint fix
+        if: steps.update-golangci-lint.outputs.changed == 'true'
+        run: make lint-fix
+
+      - name: Create pull request
+        if: steps.update-go.outputs.changed == 'true' || steps.update-golangci-lint.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: Update Go tooling
+          title: Update Go tooling
+          body: |
+            Updates this action's Go toolchain metadata.
+
+            - go.mod Go version: `${{ steps.update-go.outputs.previous-version }}` -> `${{ steps.update-go.outputs.updated-version }}`
+            - golangci-lint version: `${{ steps.update-golangci-lint.outputs.previous-lint-version }}` -> `${{ steps.update-golangci-lint.outputs.current-lint-version }}`
+          branch: chore/update-go-tooling
