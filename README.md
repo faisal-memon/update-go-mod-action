@@ -27,7 +27,7 @@ jobs:
 
       - name: Update go.mod
         id: update
-        uses: faisal-memon/update-go-mod-action@v1
+        uses: faisal-memon/update-go-mod-action@v2
         with:
           update-toolchain: "true"
 
