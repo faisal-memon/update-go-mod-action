@@ -16,16 +16,12 @@ var (
 
 // Config controls how Run reads, updates, and reports changes to go.mod.
 type Config struct {
-	GoModPath       string
-	UpdateToolchain bool
-	GitHubOutput    string
-	HTTPClient      *http.Client
-	Logger          *slog.Logger
-	hooks           hooks
-}
-
-type hooks struct {
-	latestStableVersion func() (string, error)
+	GoModPath           string
+	UpdateToolchain     bool
+	GitHubOutput        string
+	HTTPClient          *http.Client
+	Logger              *slog.Logger
+	LatestStableVersion func() (string, error)
 }
 
 // Run updates the configured go.mod file to the latest stable Go version.
@@ -42,7 +38,7 @@ func Run(config Config) error {
 		return fmt.Errorf(`could not find a "go" directive in %s`, config.GoModPath)
 	}
 
-	latestVersion, err := config.hooks.latestStableVersion()
+	latestVersion, err := config.LatestStableVersion()
 	if err != nil {
 		return err
 	}
@@ -101,8 +97,8 @@ func readGoMod(path string) (string, os.FileInfo, error) {
 
 // withDefaults fills optional config fields used by the updater runtime.
 func (config Config) withDefaults() Config {
-	if config.hooks.latestStableVersion == nil {
-		config.hooks.latestStableVersion = func() (string, error) {
+	if config.LatestStableVersion == nil {
+		config.LatestStableVersion = func() (string, error) {
 			return latestStableVersion(config)
 		}
 	}

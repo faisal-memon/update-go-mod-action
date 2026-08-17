@@ -15,7 +15,7 @@ func TestUpdateGoDirective(t *testing.T) {
 	path := writeTempGoMod(t, "module example.com/app\n\ngo 1.25.0\n")
 	outputPath := filepath.Join(t.TempDir(), "github_output")
 
-	err := Run(testConfig(path, outputPath, versionHooks("1.26.0")))
+	err := Run(testConfig(path, outputPath, latestStableVersionHook("1.26.0")))
 	require.NoError(t, err)
 
 	contents := readFile(t, path)
@@ -26,7 +26,7 @@ func TestUpdateGoDirective(t *testing.T) {
 func TestUpdateToolchainWhenRequested(t *testing.T) {
 	path := writeTempGoMod(t, "module example.com/app\n\ngo 1.25.0\ntoolchain go1.25.0\n")
 
-	config := testConfig(path, "", versionHooks("1.26.0"))
+	config := testConfig(path, "", latestStableVersionHook("1.26.0"))
 	config.UpdateToolchain = true
 	err := Run(config)
 	require.NoError(t, err)
@@ -40,7 +40,7 @@ func TestLeaveCurrentGoModUnchanged(t *testing.T) {
 	path := writeTempGoMod(t, original)
 	outputPath := filepath.Join(t.TempDir(), "github_output")
 
-	err := Run(testConfig(path, outputPath, versionHooks("1.26.0")))
+	err := Run(testConfig(path, outputPath, latestStableVersionHook("1.26.0")))
 	require.NoError(t, err)
 
 	assert.Equal(t, original, readFile(t, path))
@@ -51,7 +51,7 @@ func TestUpdatePreservesGoModPermissions(t *testing.T) {
 	path := writeTempGoMod(t, "module example.com/app\n\ngo 1.25.0\n")
 	require.NoError(t, os.Chmod(path, 0o600))
 
-	err := Run(testConfig(path, "", versionHooks("1.26.0")))
+	err := Run(testConfig(path, "", latestStableVersionHook("1.26.0")))
 	require.NoError(t, err)
 
 	fileInfo, err := os.Stat(path)
@@ -98,19 +98,17 @@ func readFile(t *testing.T, path string) string {
 	return string(contents)
 }
 
-func versionHooks(version string) hooks {
-	return hooks{
-		latestStableVersion: func() (string, error) {
-			return version, nil
-		},
+func latestStableVersionHook(version string) func() (string, error) {
+	return func() (string, error) {
+		return version, nil
 	}
 }
 
-func testConfig(goModPath, outputPath string, hooks hooks) Config {
+func testConfig(goModPath, outputPath string, latestStableVersion func() (string, error)) Config {
 	return Config{
-		GoModPath:    goModPath,
-		GitHubOutput: outputPath,
-		Logger:       slog.New(slog.NewTextHandler(io.Discard, nil)),
-		hooks:        hooks,
+		GoModPath:           goModPath,
+		GitHubOutput:        outputPath,
+		Logger:              slog.New(slog.NewTextHandler(io.Discard, nil)),
+		LatestStableVersion: latestStableVersion,
 	}
 }
