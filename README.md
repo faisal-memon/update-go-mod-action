@@ -35,7 +35,8 @@ jobs:
         with:
           commit-message: Update Go version to ${{ steps.update.outputs.updated-version }}
           title: Update Go version to ${{ steps.update.outputs.updated-version }}
-          body: go.mod Go version: `${{ steps.update-go.outputs.previous-version }}` -> `${{ steps.update-go.outputs.updated-version }}`.
+          body: |
+            go.mod Go version: `${{ steps.update.outputs.previous-version }}` -> `${{ steps.update.outputs.updated-version }}`.
           branch: chore/update-go-${{ steps.update.outputs.updated-version }}
 ```
 
