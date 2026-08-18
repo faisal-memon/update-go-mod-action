@@ -35,8 +35,7 @@ jobs:
         with:
           commit-message: Update Go version to ${{ steps.update.outputs.updated-version }}
           title: Update Go version to ${{ steps.update.outputs.updated-version }}
-          body: |
-            Updates the go.mod Go version to the latest stable release.
+          body: go.mod Go version: `${{ steps.update-go.outputs.previous-version }}` -> `${{ steps.update-go.outputs.updated-version }}`.
           branch: chore/update-go-${{ steps.update.outputs.updated-version }}
 ```
 
