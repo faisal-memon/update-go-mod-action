@@ -1,8 +1,6 @@
 # update-go-mod-action
 
-Keeps `go.mod` up to date with the latest stable Go release from `go.dev`.
-
-The action sets up Go with `actions/setup-go` and runs its Go implementation directly, so callers do not need to add a separate Go setup step before using it.
+Simple action to keep `go.mod` up to date with the latest stable Go release from `go.dev`.
 
 ## Example
 
@@ -44,11 +42,15 @@ jobs:
 
 ## Inputs
 
-- `go-mod-path`: path to the `go.mod` file. Default: `go.mod`
-- `update-toolchain`: when `true`, also updates an existing `toolchain go...` line to match. Default: `false`
+| Argument | Default | Explanation |
+| --- | --- | --- |
+|`go-mod-path`| `go.mod`| path to the `go.mod` file |
+|`update-toolchain`| `false` | When `true`, also updates an existing `toolchain go...` line to match |
 
 ## Outputs
 
-- `changed`: `true` when the action modified the target file
-- `previous-version`: the version originally declared by the `go` directive when `changed` is `true`
-- `updated-version`: the version written to the `go` directive when `changed` is `true`
+| Value | Explanation |
+| --- | --- |
+|`changed` | `true` when the action modified the target file |
+|`previous-version` | the version originally declared by the `go` directive when `changed` is `true` |
+|`updated-version` | the version written to the `go` directive when `changed` is `true`|
