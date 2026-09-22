@@ -35,10 +35,11 @@ runs:
     - name: Update go.mod
       id: update
       shell: bash
+      working-directory: ${{ github.action_path }}
       env:
-        INPUT_GO_MOD_PATH: ${{ inputs.go-mod-path }}
+        INPUT_GO_MOD_PATH: ${{ github.workspace }}/${{ inputs.go-mod-path }}
         INPUT_UPDATE_TOOLCHAIN: ${{ inputs.update-toolchain }}
-      run: go run "${{ github.action_path }}/cmd/update-go-mod"
+      run: go run ./cmd/update-go-mod
 
     - name: Set up updated Go
       if: steps.update.outputs.changed == 'true'
