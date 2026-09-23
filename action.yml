@@ -29,7 +29,7 @@ runs:
     - name: Set up Go
       uses: actions/setup-go@v7
       with:
-        go-version-file: ${{ inputs.go-mod-path }}
+        go-version-file: ${{ github.action_path }}/go.mod
         cache: "false"
 
     - name: Update go.mod
