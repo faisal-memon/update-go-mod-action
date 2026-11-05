@@ -11,6 +11,7 @@ concurrency:
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   release:
@@ -21,17 +22,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Bump and write semantic version tag
+      - name: Compute semantic version tag
         id: bump
         uses: faisal-memon/pr-label-semver@v0
         with:
           github-token: ${{ github.token }}
-          write-tag: "true"
-          write-major-tag: "true"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.bump.outputs.new-tag }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
