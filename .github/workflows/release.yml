@@ -36,3 +36,10 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Move floating major tag
+        env:
+          MAJOR_TAG: ${{ steps.bump.outputs.major-tag }}
+        run: |
+          git tag -f "$MAJOR_TAG" "$GITHUB_SHA"
+          git push --force origin "refs/tags/$MAJOR_TAG"
