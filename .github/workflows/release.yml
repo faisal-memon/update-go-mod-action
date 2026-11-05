@@ -28,44 +28,10 @@ jobs:
         with:
           github-token: ${{ github.token }}
 
-      - name: Create semantic version tags
-        uses: actions/github-script@v8
-        env:
-          NEW_TAG: ${{ steps.bump.outputs.new-tag }}
-          MAJOR_TAG: ${{ steps.bump.outputs.major-tag }}
-        with:
-          script: |
-            const tags = [process.env.NEW_TAG, process.env.MAJOR_TAG];
-
-            for (const tag of tags) {
-              const ref = `tags/${tag}`;
-              try {
-                await github.rest.git.getRef({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref,
-                });
-                await github.rest.git.updateRef({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref,
-                  sha: context.sha,
-                  force: true,
-                });
-              } catch (error) {
-                if (error.status !== 404) throw error;
-                await github.rest.git.createRef({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref: `refs/${ref}`,
-                  sha: context.sha,
-                });
-              }
-            }
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.bump.outputs.new-tag }}
+          target_commitish: ${{ github.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
