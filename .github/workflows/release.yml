@@ -33,5 +33,6 @@ jobs:
         with:
           tag_name: ${{ steps.bump.outputs.new-tag }}
           target_commitish: ${{ github.sha }}
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
